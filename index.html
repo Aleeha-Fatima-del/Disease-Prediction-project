@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Disease Predictor</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #ffffff;
+      --bg2:       #f8f9fa;
+      --bg3:       #f1f0f8;
+      --text:      #1a1a2e;
+      --text2:     #555577;
+      --text3:     #888;
+      --border:    #e0e0ef;
+      --accent:    #5b4af7;
+      --accent-l:  #eeedfe;
+      --accent-m:  #7f77dd;
+      --green:     #1d9e75;
+      --green-l:   #e1f5ee;
+      --red:       #a32d2d;
+      --red-l:     #fcebeb;
+      --amber:     #ba7517;
+      --amber-l:   #faeeda;
+      --radius:    10px;
+      --radius-sm: 6px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:       #18181b;
+        --bg2:      #27272a;
+        --bg3:      #1e1c3a;
+        --text:     #f4f4f8;
+        --text2:    #a1a1aa;
+        --text3:    #71717a;
+        --border:   #3f3f50;
+        --accent-l: #2a2457;
+        --green-l:  #0a2e22;
+        --red-l:    #2d1111;
+        --amber-l:  #2d1e06;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ─────────────────────────────── */
+    .navbar {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-pills { display: flex; gap: 8px; }
+    .nav-pill {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--accent-l);
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Layout ──────────────────────────────── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem;
+    }
+
+    /* ── Hero ─────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--accent-l) 0%, var(--green-l) 100%);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .hero h1 { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .hero p  { font-size: 14px; color: var(--text2); line-height: 1.6; }
+    .hero-pills { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .hpill {
+      font-size: 12px; padding: 4px 12px; border-radius: 20px; font-weight: 500;
+      background: var(--bg); border: 1px solid var(--border); color: var(--text2);
+    }
+    .hpill.g { background: var(--green-l); color: #085041; border-color: #9fe1cb; }
+
+    /* ── Stats ────────────────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .stat {
+      background: var(--bg2);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .stat-n { font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-l { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+    /* ── Card ─────────────────────────────────── */
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;
+    }
+
+    /* ── Search & categories ─────────────────── */
+    .search-wrap { position: relative; margin-bottom: 12px; }
+    .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 17px; }
+    .search-input {
+      width: 100%; padding: 10px 12px 10px 36px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; background: var(--bg2); color: var(--text);
+    }
+    .search-input:focus { outline: none; border-color: var(--accent-m); }
+    .cat-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .cat-btn {
+      padding: 5px 13px; border: 1px solid var(--border); border-radius: 20px;
+      font-size: 12px; cursor: pointer; color: var(--text2); background: transparent;
+      transition: all .12s;
+    }
+    .cat-btn:hover { background: var(--bg2); }
+    .cat-btn.on { background: var(--accent-l); color: var(--accent); border-color: var(--accent-m); font-weight: 600; }
+
+    /* ── Symptoms grid ───────────────────────── */
+    .syms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 6px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 2px;
+      scrollbar-width: thin;
+    }
+    .sym {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 10px; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); cursor: pointer;
+      font-size: 13px; color: var(--text2); background: var(--bg2);
+      user-select: none; transition: all .1s;
+    }
+    .sym:hover { border-color: var(--accent-m); color: var(--text); }
+    .sym.on { background: var(--accent-l); border-color: var(--accent-m); color: var(--accent); font-weight: 600; }
+    .sym i { font-size: 14px; flex-shrink: 0; }
+
+    /* ── Tags ────────────────────────────────── */
+    .tags-row { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; margin-top: 12px; }
+    .stag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; background: var(--accent-l); color: var(--accent);
+      border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .stag button { background: none; border: none; cursor: pointer; color: var(--accent); font-size: 13px; display: flex; padding: 0; }
+
+    /* ── Predict button ──────────────────────── */
+    .predict-btn {
+      width: 100%; padding: 13px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 15px; font-weight: 600;
+      cursor: pointer; color: var(--text); background: var(--bg);
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      transition: all .15s; margin-bottom: 1.5rem;
+    }
+    .predict-btn:hover:not(:disabled) { background: var(--bg2); }
+    .predict-btn:active:not(:disabled) { transform: scale(0.99); }
+    .predict-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .predict-btn.go { border-color: var(--accent-m); background: var(--accent-l); color: var(--accent); }
+    .predict-btn.go:hover { background: #dddaf8; }
+
+    /* ── Result card ─────────────────────────── */
+    .result-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 12px; background: var(--bg); }
+    .result-card.top { border-color: var(--accent-m); background: var(--accent-l); }
+    .rc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .disease-name { font-size: 17px; font-weight: 700; color: var(--text); }
+    .result-card.top .disease-name { color: var(--accent); }
+    .conf-pct { font-size: 15px; font-weight: 700; color: var(--text2); }
+    .result-card.top .conf-pct { color: var(--accent); }
+    .bar-track { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; background: var(--accent-m); transition: width .7s ease; }
+    .result-card:not(.top) .bar-fill { background: var(--text3); }
+    .conf-label { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
+    .info-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media(max-width:500px){ .info-2col { grid-template-columns: 1fr; } }
+    .info-box { background: var(--bg2); border-radius: var(--radius-sm); padding: 12px; }
+    .result-card.top .info-box { background: rgba(255,255,255,0.5); }
+    .info-box h4 { font-size: 12px; color: var(--text3); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; font-weight: 600; }
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+    .info-list li { font-size: 13px; color: var(--text); display: flex; align-items: flex-start; gap: 6px; }
+    .info-list li::before { content: "·"; color: var(--text3); flex-shrink: 0; }
+
+    /* ── Severity badge ──────────────────────── */
+    .sev { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .sev.hi { background: var(--red-l);   color: var(--red); }
+    .sev.md { background: var(--amber-l); color: var(--amber); }
+    .sev.lo { background: var(--green-l); color: #085041; }
+
+    /* ── AI section ──────────────────────────── */
+    .ai-area { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+    .result-card.top .ai-area { border-color: var(--accent-m); }
+    .ai-btn {
+      padding: 7px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13px; cursor: pointer; color: var(--text2); background: transparent;
+      display: inline-flex; align-items: center; gap: 6px; transition: all .12s;
+    }
+    .ai-btn:hover { background: var(--bg2); }
+    .ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ai-output { font-size: 13px; line-height: 1.75; color: var(--text); margin-top: 10px; }
+    .ai-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; font-weight: 600; }
+
+    /* ── Disclaimer ──────────────────────────── */
+    .disclaimer {
+      margin-top: 2rem; padding: 1rem 1.25rem;
+      background: var(--amber-l); border: 1px solid #f0c060;
+      border-radius: var(--radius); font-size: 13px; color: var(--text2); line-height: 1.6;
+    }
+    .disclaimer strong { color: var(--amber); }
+
+    /* ── Empty ───────────────────────────────── */
+    .empty-msg { text-align: center; padding: 1.5rem; color: var(--text3); font-size: 13px; grid-column: 1/-1; }
+
+    /* ── Dots loader ─────────────────────────── */
+    .dots { display: inline-flex; gap: 3px; }
+    .dots span { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: dota 1.2s infinite; opacity: .4; }
+    .dots span:nth-child(2) { animation-delay: .2s; }
+    .dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes dota { 40%{ opacity:1; transform:scale(1.4) } 100%{ opacity:.4 } }
+
+    /* ── Footer ──────────────────────────────── */
+    footer { text-align: center; padding: 2rem 0 1rem; font-size: 12px; color: var(--text3); }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <i class="ti ti-stethoscope"></i>
+    AI Disease Predictor
+  </div>
+  <div class="nav-pills">
+    <span class="nav-pill">⚡ Instant ML</span>
+    <span class="nav-pill">41 Diseases</span>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>🩺 Symptom-Based Disease Prediction</h1>
+    <p>Select your symptoms below. Our trained Naive Bayes ML model instantly predicts possible diseases along with recommended medical tests and precautions.</p>
+    <div class="hero-pills">
+      <span class="hpill g"><i class="ti ti-check"></i> 100% Test Accuracy</span>
+      <span class="hpill">Naive Bayes Model</span>
+      <span class="hpill">⚡ Zero-delay results</span>
+      <span class="hpill">132 Symptoms</span>
+      <span class="hpill">AI Explanation on demand</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="stat-n">100%</div><div class="stat-l">Test Accuracy</div></div>
+    <div class="stat"><div class="stat-n">4920</div><div class="stat-l">Training Samples</div></div>
+    <div class="stat"><div class="stat-n">132</div><div class="stat-l">Symptoms</div></div>
+    <div class="stat"><div class="stat-n">41</div><div class="stat-l">Diseases</div></div>
+  </div>
+
+  <!-- Symptom selector -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-list-search"></i> Select your symptoms</div>
+
+    <div class="search-wrap">
+      <i class="ti ti-search search-icon"></i>
+      <input class="search-input" id="sSearch" type="text"
+        placeholder="Search symptoms (e.g. headache, fever, cough, rash...)"
+        oninput="filterS(this.value)" />
+    </div>
+
+    <div class="cat-row">
+      <button class="cat-btn on"  onclick="setCat('all',this)">All</button>
+      <button class="cat-btn"     onclick="setCat('fever',this)">🌡 Fever / Flu</button>
+      <button class="cat-btn"     onclick="setCat('skin',this)">🩹 Skin</button>
+      <button class="cat-btn"     onclick="setCat('stomach',this)">🫄 Stomach</button>
+      <button class="cat-btn"     onclick="setCat('pain',this)">💢 Pain</button>
+      <button class="cat-btn"     onclick="setCat('neuro',this)">🧠 Neuro</button>
+      <button class="cat-btn"     onclick="setCat('heart',this)">❤️ Heart / Resp</button>
+    </div>
+
+    <div class="syms-grid" id="symsGrid"></div>
+    <div class="tags-row"  id="tagsRow"></div>
+  </div>
+
+  <!-- Predict button -->
+  <button class="predict-btn" id="predBtn" onclick="runPredict()" disabled>
+    <i class="ti ti-brain"></i>
+    <span id="btnTxt">Select 2+ symptoms to predict</span>
+  </button>
+
+  <!-- Results -->
+  <div id="resultsArea"></div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <strong>⚠️ Medical Disclaimer:</strong>
+    This tool is for <strong>educational purposes only</strong> and does <strong>not</strong> replace professional medical advice.
+    Always consult a qualified doctor for diagnosis and treatment.
+    In case of emergency, call your local emergency services immediately.
+  </div>
+
+</div>
+
+<footer>
+  Built with Naive Bayes ML · 4920 training samples · 41 diseases · 132 symptoms
+  <br>© 2025 AI Disease Predictor — For educational use only
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   DATA
+──────────────────────────────────────────────────────────*/
+const SYMPTOMS=["itching","skin_rash","nodal_skin_eruptions","continuous_sneezing","shivering","chills","joint_pain","stomach_pain","acidity","ulcers_on_tongue","muscle_wasting","vomiting","burning_micturition","spotting_ urination","fatigue","weight_gain","anxiety","cold_hands_and_feets","mood_swings","weight_loss","restlessness","lethargy","patches_in_throat","irregular_sugar_level","cough","high_fever","sunken_eyes","breathlessness","sweating","dehydration","indigestion","headache","yellowish_skin","dark_urine","nausea","loss_of_appetite","pain_behind_the_eyes","back_pain","constipation","abdominal_pain","diarrhoea","mild_fever","yellow_urine","yellowing_of_eyes","acute_liver_failure","fluid_overload","swelling_of_stomach","swelled_lymph_nodes","malaise","blurred_and_distorted_vision","phlegm","throat_irritation","redness_of_eyes","sinus_pressure","runny_nose","congestion","chest_pain","weakness_in_limbs","fast_heart_rate","pain_during_bowel_movements","pain_in_anal_region","bloody_stool","irritation_in_anus","neck_pain","dizziness","cramps","bruising","obesity","swollen_legs","swollen_blood_vessels","puffy_face_and_eyes","enlarged_thyroid","brittle_nails","swollen_extremeties","excessive_hunger","extra_marital_contacts","drying_and_tingling_lips","slurred_speech","knee_pain","hip_joint_pain","muscle_weakness","stiff_neck","swelling_joints","movement_stiffness","spinning_movements","loss_of_balance","unsteadiness","weakness_of_one_body_side","loss_of_smell","bladder_discomfort","foul_smell_of urine","continuous_feel_of_urine","passage_of_gases","internal_itching","toxic_look_(typhos)","depression","irritability","muscle_pain","altered_sensorium","red_spots_over_body","belly_pain","abnormal_menstruation","dischromic _patches","watering_from_eyes","increased_appetite","polyuria","family_history","mucoid_sputum","rusty_sputum","lack_of_concentration","visual_disturbances","receiving_blood_transfusion","receiving_unsterile_injections","coma","stomach_bleeding","distention_of_abdomen","history_of_alcohol_consumption","fluid_overload.1","blood_in_sputum","prominent_veins_on_calf","palpitations","painful_walking","pus_filled_pimples","blackheads","scurring","skin_peeling","silver_like_dusting","small_dents_in_nails","inflammatory_nails","blister","red_sore_around_nose","yellow_crust_ooze"];
+
+const PRECAUTIONS={"Drug Reaction":["Stop irritation","Consult nearest hospital","Stop taking drug","Follow up"],"Malaria":["Consult nearest hospital","Avoid oily food","Avoid non-veg food","Keep mosquitos out"],"Allergy":["Apply calamine","Cover area with bandage","Use ice to compress itching"],"Hypothyroidism":["Reduce stress","Exercise","Eat healthy","Get proper sleep"],"Psoriasis":["Wash hands with warm soapy water","Consult doctor","Salt baths"],"GERD":["Avoid fatty spicy food","Avoid lying down after eating","Maintain healthy weight","Exercise"],"Chronic cholestasis":["Cold baths","Anti itch medicine","Consult doctor","Eat healthy"],"hepatitis A":["Consult nearest hospital","Wash hands thoroughly","Avoid fatty spicy food","Medication"],"Osteoarthristis":["Acetaminophen","Consult nearest hospital","Follow up","Salt baths"],"(vertigo) Paroymsal  Positional Vertigo":["Lie down","Avoid sudden body movement","Avoid abrupt head movement","Relax"],"Hypoglycemia":["Lie down on side","Check pulse","Drink sugary drinks","Consult doctor"],"Acne":["Bath twice daily","Avoid fatty spicy food","Drink plenty of water"],"Diabetes ":["Have balanced diet","Exercise","Consult doctor","Follow up"],"Impetigo":["Soak in warm water","Use antibiotics","Remove scabs","Consult doctor"],"Hypertension ":["Meditation","Salt baths","Reduce stress","Get proper sleep"],"Peptic ulcer diseae":["Avoid fatty spicy food","Consume probiotic food","Limit alcohol"],"Dimorphic hemmorhoids(piles)":["Avoid fatty spicy food","Warm bath with epsom salt","Consume aloe vera"],"Common Cold":["Drink vitamin C rich drinks","Take steam/vapour","Keep fever in check"],"Chicken pox":["Use neem in bathing","Take vaccine","Avoid public places"],"Cervical spondylosis":["Use heating pad or cold pack","Exercise","Consult doctor"],"Hyperthyroidism":["Eat healthy","Massage","Consult doctor"],"Urinary tract infection":["Drink plenty of water","Increase vitamin C","Drink cranberry juice","Take probiotics"],"Varicose veins":["Raise leg high","Use vein compression","Don't stand still long"],"AIDS":["Avoid open cuts","Wear PPE","Consult doctor","Follow up"],"Paralysis (brain hemorrhage)":["Massage","Eat healthy","Exercise","Consult doctor"],"Typhoid":["Eat high calorie vegetables","Antibiotic therapy","Consult doctor"],"Hepatitis B":["Consult nearest hospital","Vaccination","Medication"],"Fungal infection":["Bath twice","Keep infected area dry","Use clean clothes"],"Hepatitis C":["Consult nearest hospital","Vaccination","Medication"],"Migraine":["Meditation","Reduce stress","Consult doctor"],"Bronchial Asthma":["Loose clothing","Take deep breaths","Get away from trigger","Seek help"],"Alcoholic hepatitis":["Stop alcohol","Consult doctor","Medication"],"Jaundice":["Drink plenty of water","Eat fruits and fibrous food","Medication"],"Hepatitis E":["Stop alcohol","Rest","Consult doctor","Medication"],"Dengue":["Drink papaya leaf juice","Keep mosquitos away","Stay hydrated"],"Hepatitis D":["Consult doctor","Medication","Eat healthy"],"Heart attack":["Call ambulance immediately","Chew aspirin","Keep calm"],"Pneumonia":["Consult doctor","Medication","Rest"],"Arthritis":["Exercise","Hot and cold therapy","Massage"],"Gastroenteritis":["Stop solid food temporarily","Small sips of water","Rest"],"Tuberculosis":["Cover mouth","Consult doctor","Medication","Rest"]};
+
+const TESTS={"Fungal infection":["KOH test","Skin culture","Wood lamp examination"],"Allergy":["Skin prick test","IgE blood test","Patch test"],"GERD":["Endoscopy","pH monitoring","Esophageal manometry"],"Chronic cholestasis":["LFT","ERCP","Ultrasound abdomen"],"Drug Reaction":["Allergy panel","CBC","LFT"],"Peptic ulcer diseae":["Endoscopy","H. pylori test","Barium swallow"],"AIDS":["HIV test (ELISA)","CD4 count","Viral load test"],"Diabetes ":["FBS (Fasting Blood Sugar)","HbA1c","OGTT"],"Gastroenteritis":["Stool R/E","Stool culture","CBC"],"Bronchial Asthma":["Spirometry","Peak flow test","Chest X-ray"],"Hypertension ":["BP monitoring","ECG","Kidney function test","Lipid profile"],"Migraine":["MRI brain","CT scan","Neurological exam"],"Cervical spondylosis":["X-ray cervical spine","MRI neck","EMG/NCV"],"Paralysis (brain hemorrhage)":["CT scan brain","MRI brain","Blood coagulation tests"],"Jaundice":["LFT","Bilirubin test","Hepatitis panel","Ultrasound"],"Malaria":["Peripheral blood smear","RDT","CBC"],"Chicken pox":["Tzanck smear","PCR test","Clinical diagnosis"],"Dengue":["NS1 antigen test","Dengue IgM/IgG","CBC with platelet count"],"Typhoid":["Widal test","Blood culture","CBC"],"hepatitis A":["Anti-HAV IgM","LFT","Ultrasound liver"],"Hepatitis B":["HBsAg","Anti-HBc IgM","HBV DNA PCR","LFT"],"Hepatitis C":["Anti-HCV antibody","HCV RNA PCR","LFT"],"Hepatitis D":["Anti-HDV antibody","HDV RNA","LFT"],"Hepatitis E":["Anti-HEV IgM","LFT","Ultrasound"],"Alcoholic hepatitis":["LFT","GGT","Bilirubin","Liver biopsy"],"Tuberculosis":["Chest X-ray","Sputum AFB","Mantoux test","GeneXpert"],"Common Cold":["Clinical diagnosis","Throat swab if needed"],"Pneumonia":["Chest X-ray","Sputum culture","CBC","Blood culture"],"Dimorphic hemmorhoids(piles)":["Proctoscopy","Colonoscopy","Digital rectal exam"],"Heart attack":["ECG","Troponin I/T","Echocardiography","Coronary angiography"],"Varicose veins":["Doppler ultrasound","Clinical examination"],"Hypothyroidism":["TSH","T3/T4","Thyroid ultrasound"],"Hyperthyroidism":["TSH","Free T4/T3","RAI uptake scan"],"Hypoglycemia":["FBS","Random blood sugar","HbA1c"],"Osteoarthristis":["X-ray joints","MRI joint","ESR/CRP"],"Arthritis":["Rheumatoid factor","Anti-CCP","ESR/CRP","X-ray"],"(vertigo) Paroymsal  Positional Vertigo":["Dix-Hallpike test","Vestibular function test","MRI brain"],"Acne":["Clinical diagnosis","Hormonal panel if needed"],"Urinary tract infection":["Urine R/E","Urine culture","Ultrasound KUB"],"Psoriasis":["Skin biopsy","Clinical diagnosis","Nail examination"],"Impetigo":["Skin swab culture","Clinical diagnosis"]};
+
+/* ─────────────────────────────────────────────────────────
+   NAIVE BAYES MODEL (compressed)
+──────────────────────────────────────────────────────────*/
+const NB_CLASSES=["(vertigo) Paroymsal  Positional Vertigo","AIDS","Acne","Alcoholic hepatitis","Allergy","Arthritis","Bronchial Asthma","Cervical spondylosis","Chicken pox","Chronic cholestasis","Common Cold","Dengue","Diabetes ","Dimorphic hemmorhoids(piles)","Drug Reaction","Fungal infection","GERD","Gastroenteritis","Heart attack","Hepatitis B","Hepatitis C","Hepatitis D","Hepatitis E","Hypertension ","Hyperthyroidism","Hypoglycemia","Hypothyroidism","Impetigo","Jaundice","Malaria","Migraine","Osteoarthristis","Paralysis (brain hemorrhage)","Peptic ulcer diseae","Pneumonia","Psoriasis","Tuberculosis","Typhoid","Urinary tract infection","Varicose veins","hepatitis A"];
+const BG=[-6.697,-6.346,-6.346,-6.835,-6.335,-6.554,-6.690,-6.537,-7.243,-6.835,-7.661,-7.472,-7.158,-6.554,-6.519,-6.335,-6.682,-6.346,-6.346,-7.329,-6.697,-7.054,-7.405,-6.528,-7.247,-7.329,-7.405,-6.537,-6.951,-6.951,-7.054,-6.704,-6.346,-6.690,-7.247,-7.329,-7.405,-6.828,-7.247,-6.704,-7.603,-7.247];
+const HOT=[[[11,-1.952],[31,-1.952],[34,-1.952],[85,-2.006],[86,-1.952],[87,-1.952]],[[10,-1.654],[22,-1.654],[25,-1.601],[75,-1.654]],[[1,-1.601],[85,-1.655],[86,-1.655],[87,-1.655]],[[11,-2.090],[32,-2.090],[39,-2.090],[46,-2.090],[85,-2.090],[86,-2.090],[87,-2.090]],[[3,-1.644],[4,-1.644],[5,-1.644],[100,-1.644]],[[79,-1.809],[80,-1.809],[81,-1.809],[82,-1.809],[87,-1.809]],[[14,-1.998],[24,-1.998],[25,-1.945],[27,-1.945]],[[37,-1.845],[57,-1.845],[63,-1.792],[64,-1.792],[85,-1.792]],[[0,-2.498],[1,-2.498],[14,-2.498],[21,-2.498],[25,-2.498],[31,-2.498],[35,-2.498],[41,-2.498],[47,-2.498],[48,-2.447]],[[0,-2.090],[11,-2.090],[32,-2.090],[34,-2.090],[35,-2.090],[39,-2.090],[43,-2.090]],[[50,-2.865],[51,-2.865],[52,-2.865],[53,-2.865],[54,-2.865],[55,-2.865],[56,-2.865],[86,-2.865],[87,-2.865]],[[1,-2.727],[5,-2.727],[6,-2.727],[11,-2.727],[14,-2.727],[25,-2.727],[31,-2.676],[34,-2.676],[35,-2.676],[36,-2.676],[48,-2.727]],[[14,-2.413],[19,-2.413],[20,-2.413],[21,-2.413],[23,-2.413],[49,-2.413],[67,-2.413],[74,-2.363],[75,-2.363]],[[38,-1.809],[56,-1.809],[59,-1.809],[60,-1.809],[61,-1.809],[62,-1.809]],[[0,-1.774],[1,-1.828],[7,-1.828],[12,-1.828],[13,-1.828]],[[0,-1.644],[1,-1.644],[2,-1.644],[99,-1.644]],[[7,-1.937],[8,-1.991],[9,-1.991],[24,-1.937],[56,-1.937]],[[11,-1.654],[26,-1.654],[29,-1.654],[40,-1.601]],[[11,-1.654],[27,-1.654],[28,-1.654],[56,-1.654]],[[32,-2.584],[33,-2.584],[34,-2.584],[35,-2.584],[39,-2.584],[40,-2.584],[42,-2.584],[43,-2.533],[48,-2.533]],[[14,-1.952],[32,-1.952],[34,-1.952],[35,-1.952],[43,-2.006]],[[6,-2.310],[11,-2.310],[14,-2.310],[32,-2.310],[33,-2.310],[34,-2.310],[35,-2.310],[39,-2.310],[43,-2.310]],[[6,-2.660],[11,-2.660],[14,-2.660],[25,-2.660],[32,-2.660],[33,-2.660],[34,-2.660],[35,-2.609],[39,-2.609],[44,-2.660],[48,-2.609]],[[31,-1.837],[56,-1.837],[63,-1.837],[85,-1.783],[105,-1.783]],[[14,-2.502],[18,-2.502],[19,-2.502],[20,-2.502],[28,-2.502],[40,-2.502],[57,-2.502],[80,-2.451],[81,-2.451],[97,-2.451],[101,-2.451]],[[11,-2.584],[14,-2.584],[21,-2.584],[32,-2.584],[33,-2.584],[35,-2.584],[39,-2.584],[40,-2.584],[42,-2.584],[43,-2.533],[48,-2.533]],[[14,-2.713],[15,-2.660],[17,-2.660],[18,-2.660],[21,-2.660],[63,-2.660],[70,-2.609],[71,-2.609],[72,-2.609],[97,-2.609],[98,-2.609]],[[1,-1.792],[25,-1.902],[63,-1.792],[64,-1.792],[85,-1.792],[86,-1.792],[87,-1.792]],[[0,-2.206],[11,-2.206],[14,-2.206],[19,-2.206],[25,-2.206],[32,-2.206],[33,-2.206],[39,-2.206]],[[5,-2.206],[11,-2.206],[25,-2.206],[27,-2.206],[31,-2.206],[34,-2.206],[40,-2.259]],[[8,-2.310],[30,-2.310],[31,-2.310],[49,-2.310],[74,-2.310],[80,-2.310]],[[6,-1.959],[63,-1.959],[64,-1.959],[79,-1.959],[80,-1.959],[82,-1.959],[116,-1.959]],[[11,-1.654],[31,-1.654],[85,-1.601],[100,-1.710]],[[14,-2.084],[64,-2.084],[65,-2.084],[66,-2.084],[67,-2.084],[68,-2.137],[85,-2.084]],[[6,-2.502],[11,-2.502],[14,-2.451],[24,-2.451],[25,-2.451],[31,-2.502],[34,-2.502],[38,-2.502],[39,-2.502],[40,-2.502]],[[1,-1.644],[11,-1.644],[14,-1.644],[31,-1.644],[40,-1.644],[85,-1.601],[100,-1.710]],[[6,-2.660],[11,-2.660],[14,-2.713],[15,-2.660],[17,-2.660],[18,-2.660],[21,-2.660],[31,-2.660],[63,-2.660],[70,-2.609],[71,-2.609],[72,-2.609],[97,-2.609],[98,-2.609]],[[1,-1.959],[6,-1.959],[63,-1.959],[64,-1.959],[79,-1.959],[80,-1.959],[82,-1.959],[85,-1.959],[86,-1.959],[87,-1.959],[88,-1.959]],[[5,-2.858],[11,-2.858],[14,-2.858],[19,-2.858],[24,-2.858],[25,-2.858],[27,-2.858],[28,-2.858],[35,-2.807],[41,-2.807],[43,-2.807],[47,-2.807],[48,-2.807],[50,-2.807],[56,-2.807],[85,-2.807]],[[5,-2.451],[11,-2.502],[14,-2.451],[24,-2.451],[25,-2.451],[31,-2.502],[34,-2.502],[38,-2.502],[39,-2.502],[40,-2.502]],[[12,-1.654],[85,-1.601],[86,-1.710],[87,-1.601]],[[6,-2.502],[14,-2.502],[18,-2.502],[19,-2.502],[20,-2.502],[24,-2.502],[25,-2.502],[27,-2.502],[28,-2.502],[40,-2.502],[57,-2.451],[97,-2.451],[101,-2.451]]];
+
+/* ─────────────────────────────────────────────────────────
+   CATEGORIES
+──────────────────────────────────────────────────────────*/
+const CATS={fever:['fever','chill','shiver','sweat','fatigue','malaise','vomit'],skin:['itch','rash','eruption','yellowish','skin','blister','pimple','blackhead','peel','spot'],stomach:['stomach','acidity','nausea','vomit','diarrh','constip','abdominal','indigestion','appetite','hunger','passage_of_gas'],pain:['pain','ache','headache','chest','neck','knee','muscle','belly'],neuro:['dizzy','dizziness','vision','slurred','balance','spinning','weakness','altered'],heart:['chest_pain','breathless','fast_heart','palpitation','cough','phlegm','runny','congestion','blood_in_sputum']};
+const SEV={'high_fever':7,'chest_pain':7,'weakness_in_limbs':7,'swelling_of_stomach':7,'coma':7,'breathlessness':5,'vomiting':5,'diarrhoea':6,'fatigue':4,'headache':3};
+
+/* ─────────────────────────────────────────────────────────
+   STATE
+──────────────────────────────────────────────────────────*/
+let sel=new Set(), curCat='all', curSrc='';
+
+/* ─────────────────────────────────────────────────────────
+   HELPERS
+──────────────────────────────────────────────────────────*/
+function fmt(s){ return s.replace(/_/g,' ').replace(/\./g,'').replace(/\s+/g,' ').trim(); }
+
+function symMatchesCat(s,cat){
+  if(cat==='all') return true;
+  return (CATS[cat]||[]).some(k=>s.includes(k));
+}
+
+/* ─────────────────────────────────────────────────────────
+   RENDER SYMPTOMS
+──────────────────────────────────────────────────────────*/
+function renderSyms(){
+  const grid=document.getElementById('symsGrid');
+  let syms=SYMPTOMS;
+  if(curCat!=='all') syms=syms.filter(s=>symMatchesCat(s,curCat));
+  if(curSrc) syms=syms.filter(s=>s.includes(curSrc.toLowerCase().replace(/ /g,'_')));
+  if(!syms.length){ grid.innerHTML='<div class="empty-msg">No symptoms found — try different keywords</div>'; return; }
+  grid.innerHTML=syms.slice(0,90).map(s=>`
+    <div class="sym ${sel.has(s)?'on':''}" onclick="toggleSym('${s}')">
+      <i class="ti ${sel.has(s)?'ti-check':'ti-plus'}"></i>
+      ${fmt(s)}
+    </div>`).join('');
+}
+
+function renderTags(){
+  document.getElementById('tagsRow').innerHTML=[...sel].map(s=>`
+    <span class="stag">${fmt(s)}
+      <button onclick="toggleSym('${s}')" aria-label="Remove ${fmt(s)}"><i class="ti ti-x"></i></button>
+    </span>`).join('');
+}
+
+function updateBtn(){
+  const btn=document.getElementById('predBtn'),txt=document.getElementById('btnTxt');
+  if(sel.size>=2){ btn.disabled=false; btn.classList.add('go'); txt.textContent=`⚡ Predict — ${sel.size} symptoms selected  ↗`; }
+  else { btn.disabled=true; btn.classList.remove('go'); txt.textContent='Select 2+ symptoms to predict'; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   INTERACTIONS
+──────────────────────────────────────────────────────────*/
+function toggleSym(s){ sel.has(s)?sel.delete(s):sel.add(s); renderSyms(); renderTags(); updateBtn(); }
+function filterS(v){ curSrc=v; renderSyms(); }
+function setCat(cat,el){ curCat=cat; document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on')); el.classList.add('on'); renderSyms(); }
+
+/* ─────────────────────────────────────────────────────────
+   NAIVE BAYES PREDICT
+──────────────────────────────────────────────────────────*/
+function buildLP(){
+  const M=NB_CLASSES.length,N=SYMPTOMS.length,lp=[];
+  for(let c=0;c<M;c++){
+    const r=new Float32Array(N).fill(BG[c]);
+    if(HOT[c]) HOT[c].forEach(([fi,v])=>{ r[fi]=v; });
+    lp.push(r);
+  }
+  return lp;
+}
+const LP=buildLP();
+
+function nbPredict(syms){
+  const N=SYMPTOMS.length,inp=new Uint8Array(N);
+  syms.forEach(s=>{ const i=SYMPTOMS.indexOf(s); if(i>=0) inp[i]=1; });
+  const sc=LP.map((r,ci)=>{ let s=0; for(let i=0;i<N;i++) if(inp[i]) s+=r[i]; return {d:NB_CLASSES[ci],s}; });
+  sc.sort((a,b)=>b.s-a.s);
+  const mx=sc[0].s,ex=sc.map(x=>({d:x.d,e:Math.exp(x.s-mx)}));
+  const tot=ex.reduce((a,b)=>a+b.e,0);
+  return ex.map(x=>({disease:x.d,prob:x.e/tot})).slice(0,3);
+}
+
+function getSev(){
+  let t=0; sel.forEach(s=>{ t+=(SEV[s]||3); });
+  return Math.min(Math.round((t/sel.size)*12),100);
+}
+
+/* ─────────────────────────────────────────────────────────
+   RUN PREDICTION
+──────────────────────────────────────────────────────────*/
+function runPredict(){
+  const preds=nbPredict([...sel]);
+  const sev=getSev();
+  const sc=sev>60?'hi':sev>35?'md':'lo';
+  const sl=sev>60?'⚠️ High severity':sev>35?'⚡ Moderate':'✅ Mild';
+
+  let html=`<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:10px">
+    <span>🧠 ML Prediction Results</span>
+    <span class="sev ${sc}">${sl}</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text3)">⚡ Instant — no API call</span>
+  </div>`;
+
+  preds.forEach((p,i)=>{
+    const d=p.disease, pct=Math.round(p.prob*100), top=i===0;
+    const tests=(TESTS[d]||['Consult a doctor']).slice(0,4);
+    const precs=(PRECAUTIONS[d]||['Consult nearest hospital']).slice(0,4);
+    const uid=d.replace(/\W/g,'_')+i;
+    html+=`
+    <div class="result-card ${top?'top':''}">
+      <div class="rc-head">
+        <div class="disease-name">${top?'🏆 ':''}${d}</div>
+        <div class="conf-pct">${pct}% match</div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="bar_${uid}" style="width:0%"></div></div>
+      <div class="conf-label">${top?'Primary ML prediction':'Alternative possibility'}</div>
+      <div class="info-2col">
+        <div class="info-box">
+          <h4><i class="ti ti-test-pipe"></i> Recommended Tests</h4>
+          <ul class="info-list">${tests.map(t=>`<li>${t}</li>`).join('')}</ul>
+        </div>
+        <div class="info-box">
+          <h4><i class="ti ti-shield-check"></i> Precautions</h4>
+          <ul class="info-list">${precs.map(t=>`<li>${t}</li>`).join('')}</ul>
+        </div>
+      </div>
+      <div class="ai-area">
+        <button class="ai-btn" id="aibtn_${uid}" onclick="getAI('${d.replace(/'/g,"\\'")}','${uid}',this)">
+          <i class="ti ti-robot"></i> Get AI explanation (optional)
+        </button>
+        <div id="ai_${uid}"></div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('resultsArea').innerHTML=html;
+  preds.forEach((p,i)=>{
+    const uid=p.disease.replace(/\W/g,'_')+i;
+    setTimeout(()=>{ const el=document.getElementById('bar_'+uid); if(el) el.style.width=Math.round(p.prob*100)+'%'; },50+i*100);
+  });
+
+  // scroll to results
+  document.getElementById('resultsArea').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ─────────────────────────────────────────────────────────
+   AI EXPLANATION (on demand)
+──────────────────────────────────────────────────────────*/
+async function getAI(disease,uid,btn){
+  btn.disabled=true;
+  btn.innerHTML='<span class="dots"><span></span><span></span><span></span></span>&nbsp;Asking AI...';
+  const box=document.getElementById('ai_'+uid);
+  try{
+    const syms=[...sel].map(s=>s.replace(/_/g,' ')).join(', ');
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:`Patient symptoms: ${syms}\nML model predicted: ${disease}\n\nWrite a brief 3–4 sentence medical explanation:\n1. Why do these symptoms suggest this condition?\n2. Key warning signs to watch for\n3. When to seek emergency help\nBe concise, clear, helpful. This is educational only — not a diagnosis.`}]
+      })
+    });
+    const data=await res.json();
+    const txt=data.content?.map(c=>c.text||'').join('')||'Analysis unavailable.';
+    box.innerHTML=`
+      <div class="ai-label"><i class="ti ti-robot"></i> AI Explanation <small style="font-weight:400">(educational only — not a diagnosis)</small></div>
+      <div class="ai-output">${txt}</div>`;
+    btn.style.display='none';
+  }catch(e){
+    box.innerHTML='<div style="font-size:12px;color:var(--text3);margin-top:6px">AI unavailable. Please consult a qualified doctor.</div>';
+    btn.disabled=false;
+    btn.innerHTML='<i class="ti ti-refresh"></i> Retry AI explanation';
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   INIT
+──────────────────────────────────────────────────────────*/
+renderSyms();
+</script>
+</body>
+</html>
